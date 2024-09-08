@@ -213,7 +213,7 @@ class AudioProcessor:
 
         return transcript.text
 
-    def text_to_voice(self, text: str) -> str:
+    def text_to_voice(self, text: str, autoplay: bool = True) -> str:
         """
         Takes text as input, generates a response using ChatBot, and saves the response as an mp3 file.
 
@@ -239,11 +239,11 @@ class AudioProcessor:
         response.write_to_file(speech_file_path)
 
         # Play response audio
-        self.play_audio(speech_file_path)
+        self.play_audio(speech_file_path, autoplay)
 
         return speech_file_path
 
-    def play_audio(self, file_path: str) -> None:
+    def play_audio(self, file_path: str, play_it: bool = True) -> None:
         """
         Plays the audio file specified by the file path.
 
@@ -252,5 +252,5 @@ class AudioProcessor:
         file_path : str
             The path to the audio file to be played.
         """
-        audio = Audio(file_path, autoplay=True)
+        audio = Audio(file_path, autoplay=play_it)
         display(audio)
