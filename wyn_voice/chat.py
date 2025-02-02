@@ -1,8 +1,9 @@
 import time
 from base64 import b64decode
-from IPython.display import Javascript, Audio, display
-from google.colab import output
+
 import openai
+from google.colab import output
+from IPython.display import Audio, Javascript, display
 
 
 class ChatBot:
@@ -23,6 +24,7 @@ class ChatBot:
     get_history() -> list:
         Returns the conversation history.
     """
+
     def __init__(self, api_key: str, protocol: str = "You are a helpful assistant"):
         """
         Initializes the ChatBot with the provided OpenAI API key.
@@ -54,7 +56,7 @@ class ChatBot:
 
         completion = self.client.chat.completions.create(
             model="gpt-3.5-turbo",  # NOTE: feel free to change it to gpt-4, or gpt-4o
-            messages=self.history
+            messages=self.history,
         )
 
         response = completion.choices[0].message.content
@@ -72,7 +74,6 @@ class ChatBot:
             The conversation history.
         """
         return self.history
-
 
 
 RECORD = """
@@ -99,6 +100,7 @@ var record = time => new Promise(async resolve => {
 })
 """
 
+
 class AudioProcessor:
     """
     A class to record audio, save it, interact with ChatBot, and play the response.
@@ -107,7 +109,7 @@ class AudioProcessor:
     -----------
     chatbot : ChatBot
         An instance of the ChatBot class to generate responses.
-    
+
     Methods:
     --------
     record_audio(sec: int = 3) -> str:
@@ -117,6 +119,7 @@ class AudioProcessor:
     play_audio(file_path: str) -> None:
         Plays the audio file specified by the file path.
     """
+
     def __init__(self, bot: ChatBot):
         """
         Initializes the AudioProcessor with the provided OpenAI API key.
@@ -144,12 +147,12 @@ class AudioProcessor:
         """
         print("Recording audio...")
         display(Javascript(RECORD))
-        s = output.eval_js('record(%d)' % (sec * 1000))
-        b = b64decode(s.split(',')[1])
-        with open('audio.wav', 'wb') as f:
+        s = output.eval_js("record(%d)" % (sec * 1000))
+        b = b64decode(s.split(",")[1])
+        with open("audio.wav", "wb") as f:
             f.write(b)
         print("Audio saved!")
-        return 'audio.wav'
+        return "audio.wav"
 
     def process_audio_and_generate_response(self) -> str:
         """
@@ -161,8 +164,7 @@ class AudioProcessor:
         print(f"Transcribing audio from: {audio_file}")
         audio_file = open(audio_file, "rb")
         transcript = self.chatbot.client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file
+            model="whisper-1", file=audio_file
         )
 
         print(transcript.text)
@@ -173,9 +175,7 @@ class AudioProcessor:
 
         # Generate speech response
         response = self.chatbot.client.audio.speech.create(
-            model="tts-1",
-            voice="alloy",
-            input=bot_answer
+            model="tts-1", voice="alloy", input=bot_answer
         )
 
         speech_file_path = "output.mp3"
@@ -207,8 +207,7 @@ class AudioProcessor:
         print(f"Transcribing audio from: {audio_file}")
         audio_file = open(audio_file, "rb")
         transcript = self.chatbot.client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file
+            model="whisper-1", file=audio_file
         )
 
         return transcript.text
@@ -230,9 +229,7 @@ class AudioProcessor:
 
         # Generate speech response
         response = self.chatbot.client.audio.speech.create(
-            model="tts-1",
-            voice="alloy",
-            input=text
+            model="tts-1", voice="alloy", input=text
         )
 
         speech_file_path = "output.mp3"
@@ -254,3 +251,75 @@ class AudioProcessor:
         """
         audio = Audio(file_path, autoplay=play_it)
         display(audio)
+
+
+import time
+from typing import Optional
+
+from pydub import AudioSegment
+
+
+class ChatEnvironment:
+    """
+    ChatEnvironment initializes with a ChatBot and an AudioProcessor
+    and provides a method to run a conversational loop.
+
+    Attributes:
+        chatbot (ChatBot): An instance of the ChatBot class to generate responses.
+        audio_processor (AudioProcessor): An instance of the AudioProcessor class
+            to handle voice-to-text and text-to-voice operations.
+    """
+
+    def __init__(self, chatbot: "ChatBot", audio_processor: "AudioProcessor") -> None:
+        """
+        Initialize the ChatEnvironment with instances of ChatBot and AudioProcessor.
+
+        Args:
+            chatbot (ChatBot): Pre-initialized chatbot object.
+            audio_processor (AudioProcessor): Pre-initialized audio processor object.
+        """
+        self.chatbot = chatbot
+        self.audio_processor = audio_processor
+
+    def start_chat(self, exit_command: Optional[str] = "exit") -> None:
+        """
+        Start the main chat loop. It continually listens for user voice input,
+        generates a response, and outputs audio until the user says the exit command.
+
+        Args:
+            exit_command (str, optional): Keyword to end the loop.
+                                          Defaults to "exit".
+        """
+        iteration_count = 0
+        prompt = ""
+
+        while exit_command.lower() not in prompt.lower():
+            # Start
+            print("------------------- START -------------------")
+            print(f"If you want to quit the program, just say '{exit_command}'.")
+
+            # Voice input from the user
+            prompt = self.audio_processor.voice_to_text(sec=4)
+            print("🤔 User:", prompt)
+
+            # Generate a response from the chatbot
+            response = self.chatbot.generate_response(prompt)
+            print("🤖 ChatBot:", response)
+
+            # Convert the chatbot's response to audio and play it
+            output_file_path = self.audio_processor.text_to_voice(response)
+            audio = AudioSegment.from_file(output_file_path)
+            audio_length = (
+                len(audio) / 1000.0 + 1
+            )  # Convert ms to seconds + small buffer
+            print("⏳ Audio lag:", audio_length)
+
+            # Wait for audio to finish playing before the next prompt
+            time.sleep(audio_length)
+
+            # Checkpoint
+            print(
+                f"------------------- round {iteration_count} finished -------------------"
+            )
+            print("------------------- next round: -------------------")
+            iteration_count += 1
