@@ -1,6 +1,8 @@
-# Wyn Voice: A Conversational AI and Audio Processing Library
+# WYN-Voice: A Conversational AI and Audio Processing Library
 
-![image](./thumbnail.png)
+<div align="center">
+  <img src="thumbnail.png" width="30%" alt="Thumbnail Image" />
+</div>
 
 ## Introduction and Motivation
 🎙️ **WYN-Voice** is a Python library designed to simplify the process of creating conversational AI applications that leverage OpenAI's GPT models. 🤖 The library provides an easy-to-use interface for generating responses to user inputs and includes functionality for recording and processing audio, 🎧 making it suitable for building interactive voice-based applications. 🗣️
