@@ -1,8 +1,9 @@
 # Wyn Voice: A Conversational AI and Audio Processing Library
 
-## Introduction and Motivation
-Wyn Voice is a Python library designed to simplify the process of creating conversational AI applications that leverage OpenAI's GPT models. The library provides an easy-to-use interface for generating responses to user inputs and includes functionality for recording and processing audio, making it suitable for building interactive voice-based applications.
+![image](./thumbnail.png)
 
+## Introduction and Motivation
+🎙️ **WYN-Voice** is a Python library designed to simplify the process of creating conversational AI applications that leverage OpenAI's GPT models. 🤖 The library provides an easy-to-use interface for generating responses to user inputs and includes functionality for recording and processing audio, 🎧 making it suitable for building interactive voice-based applications. 🗣️
 ## Directory Structure
 The project directory is organized as follows:
 
@@ -77,6 +78,29 @@ print("Saved audio response to:", output_file)
 
 # Play the saved audio file
 audio_processor.play_audio(output_file)
+```
+
+### Using the ChatEnvironment Class
+The `ChatEnvironment` class allows you to create a conversation environment to interact with `ChatBot` using voice command.
+
+```python
+from wyn_voice.chat import ChatBot, AudioProcessor, ChatEnvironment
+from google.colab import userdata
+OPENAI_API_KEY = userdata.get('OPENAI_API_KEY')
+
+# Create instances of ChatBot and AudioProcessor
+chatbot = ChatBot(
+    api_key=OPENAI_API_KEY,
+    protocol="You are a live translator."
+    "When you hear Chinese, speak English."
+    "When you hear English, speak Chinese.")
+audio_processor = AudioProcessor(chatbot)
+
+# Create an instance of ChatEnvironment
+chat_env = ChatEnvironment(chatbot, audio_processor)
+
+# Start the chat loop
+chat_env.start_chat(exit_command="Exit the program")
 ```
 
 ## Author
